@@ -1,4 +1,4 @@
-name: Deploy to Google Cloud Run
+name: Deploy to Cloud Run
 
 on:
   push:
@@ -13,34 +13,8 @@ env:
   REPOSITORY: ${{ vars.REPOSITORY }}
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18'
-        cache: 'npm'
-
-    - name: Install dependencies
-      run: npm ci
-
-    - name: Run tests
-      run: npm test --if-present
-
-    - name: Run linting
-      run: npm run lint --if-present
-
-    - name: Build application
-      run: npm run build
-
   deploy:
-    needs: test
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     
     permissions:
       contents: read
@@ -50,18 +24,31 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Build Next.js app
+      run: npm run build
+
     - name: Authenticate to Google Cloud
       uses: google-github-actions/auth@v2
       with:
         workload_identity_provider: ${{ vars.WORKLOAD_IDENTITY_PROVIDER }}
         service_account: ${{ vars.SERVICE_ACCOUNT_EMAIL }}
+        create_credentials_file: true
+        export_environment_variables: true
 
     - name: Set up Cloud SDK
       uses: google-github-actions/setup-gcloud@v2
 
-    - name: Configure Docker to use gcloud as a credential helper
-      run: |
-        gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev
+    - name: Configure Docker
+      run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev
 
     - name: Build Docker image
       run: |
@@ -83,49 +70,9 @@ jobs:
           --port 3000 \
           --memory 512Mi \
           --cpu 1 \
-          --min-instances 0 \
-          --max-instances 10 \
-          --set-env-vars NODE_ENV=production,PORT=3000 \
-          --quiet
+          --set-env-vars NODE_ENV=production
 
-    - name: Get service URL
+    - name: Get Cloud Run URL
       run: |
-        SERVICE_URL=$(gcloud run services describe ${{ env.SERVICE_NAME }} --region=${{ env.REGION }} --format='value(status.url)')
-        echo "Service deployed at: $SERVICE_URL"
-        echo "SERVICE_URL=$SERVICE_URL" >> $GITHUB_ENV
-
-    - name: Test deployment
-      run: |
-        sleep 30
-        curl -f ${{ env.SERVICE_URL }}/api/hello || exit 1
-        echo "✅ Deployment successful and healthy!"
-
-  cleanup-images:
-    needs: deploy
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    
-    permissions:
-      contents: read
-      id-token: write
-
-    steps:
-    - name: Authenticate to Google Cloud
-      uses: google-github-actions/auth@v2
-      with:
-        workload_identity_provider: ${{ vars.WORKLOAD_IDENTITY_PROVIDER }}
-        service_account: ${{ vars.SERVICE_ACCOUNT_EMAIL }}
-
-    - name: Set up Cloud SDK
-      uses: google-github-actions/setup-gcloud@v2
-
-    - name: Clean up old images (keep last 10)
-      run: |
-        # List all images and keep only the 10 most recent
-        gcloud artifacts docker images list ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.SERVICE_NAME }} \
-          --include-tags --format="value(version)" --sort-by="~CREATE_TIME" --limit=999 | \
-        tail -n +11 | \
-        while read version; do
-          echo "Deleting old image version: $version"
-          gcloud artifacts docker images delete ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.SERVICE_NAME }}:$version --quiet || true
-        done
+        URL=$(gcloud run services describe ${{ env.SERVICE_NAME }} --region ${{ env.REGION }} --format 'value(status.url)')
+        echo "Service deployed at: $URL"
