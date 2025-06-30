@@ -159,7 +159,6 @@ export default function Home() {
           <h2 className="text-3xl font-bold text-pink-600 mb-4">💕 My Dragon Knight 💕</h2>
           <p className="text-lg text-gray-700 leading-relaxed">
             🐉 You are my brave dragon knight who protects my heart with your magical sword! ⚔️<br/>
-            💖 Every day with you is a new adventure in our fairy tale! 💖<br/>
             🗡️ Together we can conquer any dragon and find all the treasures! 🗡️
           </p>
           <div className="mt-4 text-6xl">🐉💕⚔️💖🗡️💕🐉</div>
