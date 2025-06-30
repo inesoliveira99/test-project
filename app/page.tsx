@@ -13,10 +13,18 @@ const colors = [
   'bg-blue-500 hover:bg-blue-600'
 ];
 
+interface Particle {
+  id: number;
+  x: number;
+  y: number;
+  emoji: string;
+  delay: number;
+}
+
 export default function Home() {
   const [colorIndex, setColorIndex] = useState(0);
   const [clickCount, setClickCount] = useState(0);
-  const [explosions, setExplosions] = useState<{ id: number; x: number; y: number }[]>([]);
+  const [particles, setParticles] = useState<Particle[]>([]);
   const [daysTogther, setDaysTogether] = useState(0);
 
   // Calculate days since August 3, 2024
@@ -33,23 +41,37 @@ export default function Home() {
     setClickCount((prev) => prev + 1);
   };
 
-  const handleExplosion = (event: React.MouseEvent) => {
-    const rect = event.currentTarget.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
-    
-    const newExplosion = {
-      id: Date.now() + Math.random(),
-      x,
-      y
+  const createFullScreenExplosion = (type: 'hearts' | 'swords' | 'dragons') => {
+    const emojis = {
+      hearts: ['💖', '💕', '💗', '💝', '❤️', '💜', '🤍', '💙'],
+      swords: ['⚔️', '🗡️', '⚡', '🔥', '✨', '💥', '🌟', '⭐'],
+      dragons: ['🐉', '🔥', '👑', '💎', '🏰', '🛡️', '⚔️', '✨']
     };
-    
-    setExplosions(prev => [...prev, newExplosion]);
-    
-    // Remove explosion after animation
+
+    const selectedEmojis = emojis[type];
+    const newParticles: Particle[] = [];
+
+    // Create 30 particles for epic explosion
+    for (let i = 0; i < 30; i++) {
+      newParticles.push({
+        id: Date.now() + Math.random() + i,
+        x: Math.random() * 100, // Random x position across screen
+        y: -20, // Start above screen
+        emoji: selectedEmojis[Math.floor(Math.random() * selectedEmojis.length)],
+        delay: Math.random() * 1000 // Random delay up to 1 second
+      });
+    }
+
+    setParticles(prev => [...prev, ...newParticles]);
+
+    // Remove particles after animation completes
     setTimeout(() => {
-      setExplosions(prev => prev.filter(exp => exp.id !== newExplosion.id));
-    }, 2000);
+      setParticles(prev => 
+        prev.filter(particle => 
+          !newParticles.some(newP => newP.id === particle.id)
+        )
+      );
+    }, 4000);
   };
 
   return (
@@ -72,18 +94,22 @@ export default function Home() {
         ))}
       </div>
 
-      {/* Explosions */}
-      {explosions.map(explosion => (
+      {/* Falling particles */}
+      {particles.map(particle => (
         <div
-          key={explosion.id}
-          className="absolute pointer-events-none animate-ping"
+          key={particle.id}
+          className="absolute pointer-events-none text-4xl animate-bounce"
           style={{
-            left: explosion.x,
-            top: explosion.y,
-            transform: 'translate(-50%, -50%)'
+            left: `${particle.x}%`,
+            top: `${particle.y}%`,
+            animationName: 'fall',
+            animationDuration: '3s',
+            animationDelay: `${particle.delay}ms`,
+            animationFillMode: 'forwards',
+            animationTimingFunction: 'ease-in'
           }}
         >
-          <div className="text-4xl">💖⚔️🐉💕⚔️💖</div>
+          {particle.emoji}
         </div>
       ))}
 
@@ -129,27 +155,27 @@ export default function Home() {
           </p>
         </div>
 
-        {/* Explosion buttons */}
+        {/* Epic Explosion buttons */}
         <div className="mt-12 space-y-4">
-          <p className="text-lg text-gray-700 font-semibold">💥 Magical Explosion Buttons! 💥</p>
+          <p className="text-lg text-gray-700 font-semibold">💥 EPIC FULL-SCREEN EXPLOSIONS! 💥</p>
           <div className="flex flex-wrap justify-center gap-4">
             <button
-              onClick={handleExplosion}
-              className="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-lg transform hover:scale-105 transition-all duration-200 shadow-lg"
+              onClick={() => createFullScreenExplosion('hearts')}
+              className="bg-red-500 hover:bg-red-600 text-white font-bold py-4 px-8 rounded-lg transform hover:scale-105 transition-all duration-200 shadow-lg text-xl"
             >
-              💖 Heart Explosion 💖
+              💖 HEART RAIN 💖
             </button>
             <button
-              onClick={handleExplosion}
-              className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg transform hover:scale-105 transition-all duration-200 shadow-lg"
+              onClick={() => createFullScreenExplosion('swords')}
+              className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-4 px-8 rounded-lg transform hover:scale-105 transition-all duration-200 shadow-lg text-xl"
             >
-              ⚔️ Sword Storm ⚔️
+              ⚔️ SWORD STORM ⚔️
             </button>
             <button
-              onClick={handleExplosion}
-              className="bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 px-6 rounded-lg transform hover:scale-105 transition-all duration-200 shadow-lg"
+              onClick={() => createFullScreenExplosion('dragons')}
+              className="bg-purple-500 hover:bg-purple-600 text-white font-bold py-4 px-8 rounded-lg transform hover:scale-105 transition-all duration-200 shadow-lg text-xl"
             >
-              🐉 Dragon Power 🐉
+              🐉 DRAGON MAGIC 🐉
             </button>
           </div>
         </div>
@@ -159,11 +185,25 @@ export default function Home() {
           <h2 className="text-3xl font-bold text-pink-600 mb-4">💕 My Dragon Knight 💕</h2>
           <p className="text-lg text-gray-700 leading-relaxed">
             🐉 You are my brave dragon knight who protects my heart with your magical sword! ⚔️<br/>
+            💖 Every day with you is a new adventure in our fairy tale! 💖<br/>
             🗡️ Together we can conquer any dragon and find all the treasures! 🗡️
           </p>
           <div className="mt-4 text-6xl">🐉💕⚔️💖🗡️💕🐉</div>
         </div>
       </div>
+
+      <style jsx>{`
+        @keyframes fall {
+          0% {
+            transform: translateY(-100vh) rotate(0deg);
+            opacity: 1;
+          }
+          100% {
+            transform: translateY(100vh) rotate(360deg);
+            opacity: 0;
+          }
+        }
+      `}</style>
     </div>
   );
 }
