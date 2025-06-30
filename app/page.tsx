@@ -22,8 +22,6 @@ interface Particle {
 }
 
 export default function Home() {
-  const [colorIndex, setColorIndex] = useState(0);
-  const [clickCount, setClickCount] = useState(0);
   const [particles, setParticles] = useState<Particle[]>([]);
   const [daysTogther, setDaysTogether] = useState(0);
 
@@ -36,42 +34,39 @@ export default function Home() {
     setDaysTogether(diffDays);
   }, []);
 
-  const handleClick = () => {
-    setColorIndex((prev) => (prev + 1) % colors.length);
-    setClickCount((prev) => prev + 1);
-  };
-
   const createFullScreenExplosion = (type: 'hearts' | 'swords' | 'dragons') => {
-    const emojis = {
+    const images = {
       hearts: ['💖', '💕', '💗', '💝', '❤️', '💜', '🤍', '💙'],
-      swords: ['⚔️', '🗡️', '⚡', '🔥', '✨', '💥', '🌟', '⭐'],
-      dragons: ['🐉', '🔥', '👑', '💎', '🏰', '🛡️', '⚔️', '✨']
+      swords: ['/sword.png', '/sword2.png', '/sword3.png', '/sword4.png', '/sword5.png', '/sword6.png'],
+      dragons: ['/dragon1.png', '/dragon3.png', '/dragon4.png', '/dragon5.png', '/dragon6.png']
     };
 
-    const selectedEmojis = emojis[type];
+    const selectedImages = images[type];
     const newParticles: Particle[] = [];
 
-    // Create 30 particles for epic explosion
-    for (let i = 0; i < 30; i++) {
+    // Create 80 particles for EPIC CHAOS!
+    const particleCount = type === 'hearts' ? 50 : 80;
+    
+    for (let i = 0; i < particleCount; i++) {
       newParticles.push({
         id: Date.now() + Math.random() + i,
-        x: Math.random() * 100, // Random x position across screen
-        y: -20, // Start above screen
-        emoji: selectedEmojis[Math.floor(Math.random() * selectedEmojis.length)],
-        delay: Math.random() * 1000 // Random delay up to 1 second
+        x: Math.random() * 120 - 10, // Spawn slightly off-screen for full coverage
+        y: -50, // Start well above screen
+        emoji: selectedImages[Math.floor(Math.random() * selectedImages.length)],
+        delay: Math.random() * 2000 // Much faster - Random delay up to 0.2 seconds only!
       });
     }
 
     setParticles(prev => [...prev, ...newParticles]);
 
-    // Remove particles after animation completes
+    // Remove particles after animation completes (faster cleanup)
     setTimeout(() => {
       setParticles(prev => 
         prev.filter(particle => 
           !newParticles.some(newP => newP.id === particle.id)
         )
       );
-    }, 4000);
+    }, 6000); // Reduced from 6000ms to 3000ms
   };
 
   return (
@@ -98,18 +93,32 @@ export default function Home() {
       {particles.map(particle => (
         <div
           key={particle.id}
-          className="absolute pointer-events-none text-4xl animate-bounce"
+          className="absolute pointer-events-none"
           style={{
             left: `${particle.x}%`,
             top: `${particle.y}%`,
             animationName: 'fall',
-            animationDuration: '3s',
+            animationDuration: '4s', // Much faster - reduced from 4s to 2s
             animationDelay: `${particle.delay}ms`,
             animationFillMode: 'forwards',
             animationTimingFunction: 'ease-in'
           }}
         >
-          {particle.emoji}
+          {particle.emoji.startsWith('/') ? (
+            <img 
+              src={particle.emoji} 
+              alt="explosion" 
+              className="w-16 h-16 md:w-24 md:h-24 object-contain animate-spin"
+              style={{
+                animationDuration: '1s', // Much faster spinning - reduced from 1s to 0.5s
+                filter: 'drop-shadow(0 0 10px rgba(255, 255, 255, 0.8))'
+              }}
+            />
+          ) : (
+            <div className="text-4xl md:text-6xl animate-pulse">
+              {particle.emoji}
+            </div>
+          )}
         </div>
       ))}
 
@@ -122,70 +131,38 @@ export default function Home() {
             💕 {daysTogther} days together! 💕
           </div>
         </div>
-        
-        <p className="text-lg text-gray-700 mb-8">
-          🗡️ Click the dragon button to change its powers! 🗡️
-        </p>
-        
-        <button
-          onClick={handleClick}
-          className={`
-            ${colors[colorIndex]} 
-            text-white font-bold py-6 px-10 rounded-xl 
-            transform transition-all duration-300 ease-in-out
-            hover:scale-110 active:scale-95
-            shadow-xl hover:shadow-2xl
-            text-2xl border-4 border-yellow-400
-            relative
-          `}
-        >
-          🐉 Dragon Love Button 🐉
-          <div className="absolute -top-2 -right-2 text-2xl animate-spin">⚔️</div>
-          <div className="absolute -bottom-2 -left-2 text-2xl animate-bounce">💖</div>
-        </button>
-
-        <div className="mt-8 space-y-4">
-          <p className="text-gray-700 text-xl">
-            🗡️ Dragon button clicked: <span className="font-bold text-gray-800 text-2xl">{clickCount}</span> times ⚔️
-          </p>
-          <p className="text-gray-700 text-xl">
-            🐉 Current dragon power: <span className="font-bold text-gray-800 text-2xl">
-              {colors[colorIndex].split(' ')[0].replace('bg-', '').replace('-500', '')} magic
-            </span> 🐉
-          </p>
-        </div>
 
         {/* Epic Explosion buttons */}
         <div className="mt-12 space-y-4">
-          <p className="text-lg text-gray-700 font-semibold">💥 EPIC FULL-SCREEN EXPLOSIONS! 💥</p>
+          <p className="text-lg text-gray-700 font-semibold">💥 EPIC CHAOS MODE! 💥</p>
           <div className="flex flex-wrap justify-center gap-4">
             <button
               onClick={() => createFullScreenExplosion('hearts')}
               className="bg-red-500 hover:bg-red-600 text-white font-bold py-4 px-8 rounded-lg transform hover:scale-105 transition-all duration-200 shadow-lg text-xl"
             >
-              💖 HEART RAIN 💖
+              💖 HEART STORM 💖
             </button>
             <button
               onClick={() => createFullScreenExplosion('swords')}
               className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-4 px-8 rounded-lg transform hover:scale-105 transition-all duration-200 shadow-lg text-xl"
             >
-              ⚔️ SWORD STORM ⚔️
+              ⚔️ SWORD CHAOS ⚔️
             </button>
             <button
               onClick={() => createFullScreenExplosion('dragons')}
               className="bg-purple-500 hover:bg-purple-600 text-white font-bold py-4 px-8 rounded-lg transform hover:scale-105 transition-all duration-200 shadow-lg text-xl"
             >
-              🐉 DRAGON MAGIC 🐉
+              🐉 DRAGON INVASION 🐉
             </button>
           </div>
+          <p className="text-sm text-gray-600 italic">⚠️ Warning: Epic chaos mode activated! ⚠️</p>
         </div>
 
         {/* Love message */}
         <div className="mt-12 p-6 bg-white/80 rounded-2xl shadow-xl border-4 border-pink-300">
           <h2 className="text-3xl font-bold text-pink-600 mb-4">💕 My Dragon Knight 💕</h2>
           <p className="text-lg text-gray-700 leading-relaxed">
-            🐉 You are my brave dragon knight who protects my heart with your magical sword! ⚔️<br/>
-            🗡️ Together we can conquer any dragon and find all the treasures! 🗡️
+            🐉 You are my brave dragon knight who protects my heart with your sword! ⚔️
           </p>
           <div className="mt-4 text-6xl">🐉💕⚔️💖🗡️💕🐉</div>
         </div>
@@ -194,11 +171,15 @@ export default function Home() {
       <style jsx>{`
         @keyframes fall {
           0% {
-            transform: translateY(-100vh) rotate(0deg);
+            transform: translateY(-150vh) rotate(0deg) scale(0.5);
+            opacity: 1;
+          }
+          50% {
+            transform: translateY(0vh) rotate(180deg) scale(1.2);
             opacity: 1;
           }
           100% {
-            transform: translateY(100vh) rotate(360deg);
+            transform: translateY(150vh) rotate(360deg) scale(0.8);
             opacity: 0;
           }
         }
