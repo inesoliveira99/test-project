@@ -1,3 +1,3 @@
 # Test Project
 
-![infrastructure](infrastructure_diagram.png)
+![infrastructure](infrastructure_diagram.svg)
